@@ -107,6 +107,8 @@ export class WhatsappService implements OnModuleInit {
     const phone = contact.number || msg.from.replace('@lid', '').replace('@c.us', '');
 
     this.activeChats.set(chatId, chat);
+    const cleanPhone = chatId.replace('@c.us', '').replace('@lid', '');
+    this.activeChats.set(cleanPhone, chat);
 
     const name = contact.pushname || contact.name || 'Cliente de WhatsApp';
 
@@ -262,21 +264,21 @@ export class WhatsappService implements OnModuleInit {
     }
   }
 
-  async sendNotification(phone: string, message: string) {
+  public async sendNotification(phone: string, message: string): Promise<void> {
     try {
+      const cleanPhone = phone.replace('@c.us', '').replace('@lid', '');
       const chat = this.activeChats.get(phone) 
-        || this.activeChats.get(phone + '@c.us')
-        || this.activeChats.get(phone + '@lid');
-
+        || this.activeChats.get(cleanPhone)
+        || this.activeChats.get(cleanPhone + '@c.us');
+      
       if (chat) {
         await chat.sendMessage(message);
-        console.log(`[SISTEMA] Notificación enviada vía chat activo a ${phone}`);
+        console.log(`[SISTEMA] Notificación enviada a ${cleanPhone}`);
       } else {
-        await this.client.sendMessage(phone, message);
-        console.log(`[SISTEMA] Notificación enviada vía cliente a ${phone}`);
+        console.log(`[SISTEMA] No hay chat activo para ${cleanPhone}`);
       }
     } catch (error) {
-      console.error(`[SISTEMA] Error al enviar notificación a ${phone}:`, error);
+      console.error(`[SISTEMA] Error notificación:`, error.message);
     }
   }
 
