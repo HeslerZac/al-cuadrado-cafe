@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (data: any) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,10 +25,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    if (!storedToken) return;
+    if (!storedToken) {
+      setLoading(false);
+      return;
+    }
 
     // Verificar si el token sigue siendo válido
     fetch(`${window.location.protocol}//${window.location.hostname}:8007/auth/profile`, {
@@ -42,6 +47,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     .catch(() => {
       logout();
       window.location.href = '/login';
+    })
+    .finally(() => {
+      setLoading(false);
     });
   }, []);
 
@@ -65,7 +73,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       token, 
       login, 
       logout, 
-      isAuthenticated: !!token 
+      isAuthenticated: !!token,
+      loading
     }}>
       {children}
     </AuthContext.Provider>
