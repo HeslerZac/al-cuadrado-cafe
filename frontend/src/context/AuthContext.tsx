@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode, FC } from 'react';
 
 interface User {
   id: number;
