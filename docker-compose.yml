@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: al_cuadrado_cafe_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: al_cuadrado_cafe_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - al_cuadrado_cafe_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: al_cuadrado_cafe_backend
+    restart: always
+    ports:
+      - "8007:3000"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=admin123
+      - DATABASE_NAME=al_cuadrado_cafe_db
+      - JWT_SECRET=super_secret_key
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=llama-3.3-70b-versatile
+      - WHATSAPP_VERIFY_TOKEN=al_cuadrado_cafe_verify
+      - WHATSAPP_ACCESS_TOKEN=
+      - WHATSAPP_PHONE_NUMBER_ID=
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - al_cuadrado_cafe_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: al_cuadrado_cafe_frontend
+    restart: always
+    ports:
+      - "3007:80"
+    depends_on:
+      - backend
+    networks:
+      - al_cuadrado_cafe_network
+
+  adminer:
+    image: adminer
+    container_name: al_cuadrado_cafe_adminer
+    restart: always
+    ports:
+      - "8087:8080"
+    networks:
+      - al_cuadrado_cafe_network
+
+networks:
+  al_cuadrado_cafe_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
