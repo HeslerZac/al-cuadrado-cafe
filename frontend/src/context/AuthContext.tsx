@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
 
 interface User {
   id: number;
@@ -17,12 +17,32 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('user');
     return saved ? JSON.parse(saved) : null;
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) return;
+
+    // Verificar si el token sigue siendo válido
+    fetch(`${window.location.protocol}//${window.location.hostname}:8007/auth/profile`, {
+      headers: { Authorization: `Bearer ${storedToken}` }
+    })
+    .then(res => {
+      if (!res.ok) {
+        logout();
+        window.location.href = '/login';
+      }
+    })
+    .catch(() => {
+      logout();
+      window.location.href = '/login';
+    });
+  }, []);
 
   const login = (data: any) => {
     setUser(data.user);
